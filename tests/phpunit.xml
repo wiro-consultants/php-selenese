@@ -1,0 +1,7 @@
+<phpunit bootstrap="__init__.php">
+	<testsuites>
+		<testsuite name="selenese">
+			<directory>cases</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>
