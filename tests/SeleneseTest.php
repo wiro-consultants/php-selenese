@@ -115,7 +115,7 @@ abstract class SeleneseTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * Get full path of a log file
 	 */
-	public function getLogPath($path) {
+	protected function getLogPath($path) {
 		return dirname(__FILE__).'/logs/'.$path;
 	}
 }
