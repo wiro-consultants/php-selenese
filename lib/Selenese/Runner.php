@@ -26,9 +26,9 @@ class Runner {
      *
      * @return array An array of arrays containing the command and the commandResult
      */
-    public function run() {
-        $webDriver = new \WebDriver($this->hubUrl);
-        $session = $webDriver->session('phantomjs'); // todo: more support here
+    public function run($output = true) {
+        $capabilities = array(\WebDriverCapabilityType::BROWSER_NAME => 'phantomjs');
+        $session = \RemoteWebDriver::create($this->hubUrl, $capabilities);
 
         // always open the base URL and then clear any cookies we've got around
         if ($this->test->commands[0]->arg1 != $this->test->baseUrl.'/') {
@@ -40,8 +40,10 @@ class Runner {
         $results = array();
         foreach ($this->test->commands as $command) {
 
-            // todo: verbosity option
-            echo "Running: | " . str_replace('Selenese\\Command\\', '', get_class($command)) . ' | ' . $command->arg1. ' | ' . $command->arg2 . ' | ';
+            if ($output) {
+                // todo: verbosity option
+                echo "Running: | " . str_replace('Selenese\\Command\\', '', get_class($command)) . ' | ' . $command->arg1. ' | ' . $command->arg2 . ' | ';
+            }
 
             try {
                 $commandResult = $command->runWebDriver($session);
@@ -52,7 +54,9 @@ class Runner {
 
             // todo: screenshots after each command option
 
-            echo ($commandResult->success ? 'SUCCESS | ' : 'FAILED | ') . $commandResult->message . "\n";
+            if ($output) {
+                echo ($commandResult->success ? 'SUCCESS | ' : 'FAILED | ') . $commandResult->message . "\n";
+            }
 
             $results[] = array($command, $commandResult);
 
