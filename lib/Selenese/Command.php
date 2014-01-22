@@ -20,7 +20,7 @@ abstract class Command {
     abstract public function runWebDriver(\WebDriver $session);
 
     /**
-     * Utility function to fetch an element of throw an error
+     * Utility function to fetch an element or throw an error
      *
      * @param \WebDriverSession $session
      * @param string $locator
@@ -40,6 +40,80 @@ abstract class Command {
             throw new NoSuchElement($locator);
         }
         return $element;
+    }
+
+    /**
+     * Utility function to fetch an element attribute or throw an error
+     *
+     * @param \WebDriverSession $session
+     * @param string $locator
+     * @throws \Exception
+     * @throws \NoSuchElementWebDriverError
+     * @return string
+     */
+    protected function getAttribute(\WebDriver $session, $locator) {
+        $pos = strrpos($locator, '@');
+
+        if ($pos === false) {
+            throw new NoSuchAttribute($locator);
+        }
+
+        $elementLocator = substr($locator, 0, $pos - 1);
+        $attributeName = substr($locator, $pos);
+
+        $this->getElement($session, $elementLocator);
+
+        $attribute = $element->getAttribute($attributeName);
+        if ($attribute === null) {
+            throw new NoSuchAttribute($locator);
+        }
+        return $attribute;
+    }
+
+    protected function getSelectOptions(\WebDriver $session, $locator) {
+        $element = $this->getElement($session, $locator);
+        try {
+            $options = $element->findElements(
+                \WebDriverBy::tagName('option')
+            );
+        }
+        catch (\NoSuchElementWebDriverError $e) {
+            throw new NoSuchOptions($locator);
+        }
+
+        return $options;
+    }
+
+    protected function getValue(\WebDriver $session, $locator) {
+        $element = $this->getElement($session, $locator);
+        switch ($element->getTagName()) {
+            case 'input':
+            case 'button':
+                $element = $this->getElement($session, $locator);
+                return $element->getAttribute('value');
+
+            case 'textarea':
+                $element = $this->getElement($session, $locator);
+                return $element->getText();
+
+            case 'select':
+                $values = array();
+
+                $options = $this->getSelectOptions($session, $locator);
+                foreach ($options as $option) {
+                    if ($option->isSelected()) {
+                        try {
+                            $value = $option->getAttribute('value');
+                        } catch (NoSuchAttribute $e) {
+                            $value = $option->getText();
+                        }
+
+                        $values[] = $value;
+                    }
+                }
+
+                return implode(';', $values);
+        }
     }
 
     // these are all mostly simliar
